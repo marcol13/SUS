@@ -6,14 +6,24 @@ def read_data(path: str):
 
 def crossvalidation(data, k: int = 10):
     print(np.shape(data)[0])
+    subset_size = np.shape(data)[0] // k
+
     for i in range(k):
-        pass
+        data[i * subset_size : (i+1) * subset_size]
 
 def predict(no: int):
     X = read_data(f"./data/{no}-X.csv")
     y = read_data(f"./data/{no}-Y.csv")
     data = pd.concat([X, y], axis=1).values
-    crossvalidation(data, 10)
+    # crossvalidation(data, 10)
+    print(find_division(data, 1))
+
+def mse(y_true, y_pred):
+    pass
+
+def find_division(data: np.ndarray, col: int):
+    sorted_indexes = np.argsort(data[:, col])
+    return data[sorted_indexes]
 
 predict(1)
 

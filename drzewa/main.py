@@ -1,3 +1,4 @@
+from multiprocessing.connection import deliver_challenge
 import pandas as pd
 import numpy as np
 
@@ -16,14 +17,31 @@ def predict(no: int):
     y = read_data(f"./data/{no}-Y.csv")
     data = pd.concat([X, y], axis=1).values
     # crossvalidation(data, 10)
-    print(find_division(data, 1))
+    find_division(data, 1)
 
 def mse(y_true, y_pred):
-    pass
+    return np.mean((y_pred - y_true)**2)
 
 def find_division(data: np.ndarray, col: int):
     sorted_indexes = np.argsort(data[:, col])
-    return data[sorted_indexes]
+    sorted_data = data[sorted_indexes]
+    _, unique_indices = np.unique(sorted_data[:, col], return_index=True)
+    min_loss = None
+    div_value = None
+
+    for index in unique_indices[1:]:
+        left = sorted_data[:index]
+        right = sorted_data[index:]
+
+        loss = min(mse(np.mean(left[:, -1]), sorted_data[:, -1]), \
+            mse(np.mean(right[:, -1]), sorted_data[:, -1]))
+
+        if min_loss == None or loss < min_loss:
+            min_loss = loss
+            div_value = sorted_data[index, col]
+            print()
+    
+    return min_loss, div_value
 
 predict(1)
 

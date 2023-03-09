@@ -5,14 +5,6 @@ import numpy as np
 def read_data(path: str):
     return pd.read_csv(path)
 
-def crossvalidation(data, k: int = 10):
-    print(np.shape(data)[0])
-
-    subset_size = np.shape(data)[0] // k
-
-    for i in range(k):
-        data[i * subset_size : (i+1) * subset_size]
-
 def predict(no: int):
     X = read_data(f"./data/{no}-X.csv")
     y = read_data(f"./data/{no}-Y.csv")
@@ -69,19 +61,12 @@ class Node():
         if self.level >= self.max_level:
             self.is_leaf = True
             self.predict_value = np.mean(self.data[:, -1])
-            print(self.predict_value)
         else:
             _, self.value, self.col = find_split(self.data)
-            print(self.value)
-            print(self.col)
-            # print(np.shape(self.data))
             condition = self.data[:, self.col] < self.value
-            print(condition)
+            
             left_data = self.data[condition]
             right_data = self.data[~condition]
-
-            print(np.shape(left_data))
-            print(np.shape(right_data))
 
             self.left = Node(left_data, self.level + 1, self.max_level)
             self.right = Node(right_data, self.level + 1, self.max_level)
@@ -101,13 +86,12 @@ class Node():
 
     def predict(self, example):
         if self.is_leaf == True:
-            print("XDDDD")
             return self.predict_value
         else:
-            if example[self.col] <= self.value:
-                self.left.predict(example)
+            if example[self.col] < self.value:
+                return self.left.predict(example)
             else:
-                self.right.predict(example)
+                return self.right.predict(example)
 
 # X = read_data(f"./data/1-X.csv")
 # y = read_data(f"./data/1-Y.csv")
@@ -115,3 +99,41 @@ class Node():
 
 # tree = Node(data)
 # tree.perform_split()
+
+def crossvalidation(data, k: int = 10):
+    print(np.shape(data)[0])
+
+    subset_size = np.shape(data)[0] // k
+    rmse_total = []
+
+    for i in range(k):
+        val_indices = np.arange(start= i * subset_size, stop=(i + 1) * subset_size)
+        train_indices = np.ones(np.shape(data)[0], dtype=bool)
+        train_indices[val_indices] = False
+
+        validation = data[val_indices]
+        train = data[train_indices]
+
+        tree = Node(train)
+        tree.perform_split()
+
+        rmse_avg = None
+
+        for row in validation:
+            predicted = tree.predict(row)
+            ground_truth = row[-1]
+            rmse = np.sqrt(np.mean((predicted - ground_truth)**2))
+            if rmse_avg == None:
+                rmse_avg = rmse
+            else:
+                rmse_avg = (rmse_avg + rmse) / 2
+
+        rmse_total.append(rmse_avg)
+            
+    print(np.mean(rmse_total))
+
+
+X = read_data(f"./data/1-X.csv")
+y = read_data(f"./data/1-Y.csv")
+data = pd.concat([X, y], axis=1).values
+crossvalidation(data)

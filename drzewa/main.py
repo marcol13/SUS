@@ -1,6 +1,7 @@
-from multiprocessing.connection import deliver_challenge
 import pandas as pd
 import numpy as np
+
+from tqdm import tqdm
 
 def read_data(path: str):
     return pd.read_csv(path)
@@ -148,13 +149,24 @@ rmse = [0.667,
         0.570]
 
 def evaluate(levels):
-    for no in range(1,14):
+    # for no in range(1,14):
+    for no in tqdm(range(1,14)):
         X = read_data(f"./data/{no}-X.csv")
         y = read_data(f"./data/{no}-Y.csv")
-        test = read_data(f"./data/{no}-test.csv")
+        test = read_data(f"./data/{no}-test.csv").values
         data = pd.concat([X, y], axis=1).values
 
-        tree = Node(data)
+        tree = Node(data, max_level=levels[no - 1])
         tree.perform_split()
+
+        predicted_list = []
+
+        for row in test:
+            predicted_list.append(tree.predict(row))
+
+        predicted_list = np.array(predicted_list)
+        pd.DataFrame(predicted_list, columns=["Y"]).to_csv(f"./data/{no}.csv", index=None)
+
+
 
 evaluate(levels)

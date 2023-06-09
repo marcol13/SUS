@@ -1,0 +1,14 @@
+0   acousticness    q
+1   danceability    q
+2   duration_ms   q
+3   energy  q
+4   instrumentalness    q
+5   key q
+6   liveness    q
+7   loudness    q
+8   mode    i
+9   speechiness q
+10  tempo   q
+11  time_signature  q
+12  valence q
+
